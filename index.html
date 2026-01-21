@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora de Salários - Mega Thorra</title>
+
+  <style>
+    :root{
+      --brand: #d50000;        /* vermelho da marca (ajuste fino se quiser) */
+      --brand-2: #a80000;
+      --ink: #0f172a;
+      --muted:#64748b;
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --line:#e8eaf1;
+      --ok:#16a34a;
+      --danger:#dc2626;
+      --shadow: 0 14px 40px rgba(15, 23, 42, .10);
+      --radius: 18px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", "Noto Sans", "Liberation Sans", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 500px at 50% -80px, rgba(213,0,0,.10), transparent 55%),
+        radial-gradient(900px 380px at 10% 30%, rgba(213,0,0,.08), transparent 45%),
+        var(--bg);
+    }
+
+    .wrap{
+      max-width: 980px;
+      margin: 28px auto;
+      padding: 0 18px 28px;
+    }
+
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .brandBox{
+      display:flex;
+      align-items:center;
+      gap: 14px;
+      background: rgba(255,255,255,.75);
+      border: 1px solid rgba(255,255,255,.5);
+      backdrop-filter: blur(6px);
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, .06);
+    }
+
+    .brandBox img{ height: 54px; width:auto; }
+    .titleBlock{ line-height:1.1; }
+    .titleBlock h1{
+      font-size: 20px;
+      margin:0;
+      letter-spacing: .2px;
+    }
+    .titleBlock p{
+      margin:6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(213,0,0,.18);
+      background: rgba(213,0,0,.08);
+      color: var(--brand-2);
+      font-weight: 700;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 380px 1fr;
+      gap: 18px;
+      align-items:start;
+    }
+
+    .card{
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(232,234,241,.9);
+      overflow:hidden;
+    }
+
+    .cardHeader{
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+
+    .cardHeader h2{
+      font-size: 14px;
+      margin:0;
+      letter-spacing:.2px;
+    }
+    .cardHeader .hint{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .cardBody{ padding: 16px 18px 18px; }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .field label{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      display:flex;
+      align-items:center;
+      gap: 8px;
+    }
+
+    .control{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background:#fff;
+      transition: .15s ease;
+    }
+    .control:focus-within{
+      border-color: rgba(213,0,0,.35);
+      box-shadow: 0 0 0 4px rgba(213,0,0,.10);
+    }
+
+    select, input{
+      width:100%;
+      border:none;
+      outline:none;
+      font-size: 14px;
+      background: transparent;
+      color: var(--ink);
+    }
+    input[readonly]{ color: #334155; }
+
+    .mini{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* tabela */
+    .tableWrap{ width:100%; }
+    table{ width:100%; border-collapse:collapse; }
+    thead th{
+      text-align:left;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      background: #fafbff;
+    }
+    thead th:nth-child(2), thead th:nth-child(3){ text-align:right; }
+
+    tbody td{
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+    tbody td:nth-child(2), tbody td:nth-child(3){ text-align:right; font-variant-numeric: tabular-nums; }
+    tbody tr:hover td{ background: #fcfcff; }
+
+    .sectionRow td{
+      padding: 10px 14px;
+      border-bottom:none;
+      background: transparent;
+    }
+    .sectionTag{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(213,0,0,.18);
+      background: rgba(213,0,0,.06);
+      color: var(--brand-2);
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .strong{
+      background: rgba(213,0,0,.06);
+      font-weight: 800;
+    }
+
+    .strong td{
+      border-bottom: 1px solid rgba(213,0,0,.15);
+    }
+
+    .moneyNeg{ color: #b91c1c; }
+
+    /* botões */
+    .actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    .btn{
+      flex: 1;
+      min-width: 160px;
+      border:none;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 800;
+      cursor:pointer;
+      transition: .15s ease;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      letter-spacing:.2px;
+    }
+    .btnPrimary{
+      background: var(--brand);
+      color:#fff;
+      box-shadow: 0 10px 22px rgba(213,0,0,.22);
+    }
+    .btnPrimary:hover{ background: var(--brand-2); transform: translateY(-1px); }
+    .btnGhost{
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--ink);
+    }
+    .btnGhost:hover{ border-color: rgba(213,0,0,.35); transform: translateY(-1px); }
+    .btnDanger{
+      background: rgba(220,38,38,.10);
+      border: 1px solid rgba(220,38,38,.25);
+      color: #b91c1c;
+    }
+    .btnDanger:hover{ background: rgba(220,38,38,.14); transform: translateY(-1px); }
+
+    .result{
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(22,163,74,.25);
+      background: rgba(22,163,74,.06);
+      display:none;
+      color: #14532d;
+      font-weight: 700;
+    }
+
+    .footNote{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    /* responsivo */
+    @media (max-width: 860px){
+      .grid{ grid-template-columns: 1fr; }
+      .badge{ display:none; }
+      .brandBox{ width: 100%; justify-content:center; }
+      .titleBlock h1{ text-align:center; }
+      .titleBlock p{ text-align:center; }
+    }
+
+    @media print{
+      body{ background:#fff; }
+      .header, .actions, .result, .footNote{ display:none !important; }
+      .card{ box-shadow:none; border:1px solid #ddd; }
+      .wrap{ margin:0; padding:0; max-width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <div class="header">
+      <div class="brandBox">
+        <img src="logo.png" alt="Mega Thorra" />
+        <div class="titleBlock">
+          <h1>Calculadora de Salários</h1>
+          <p>Selecione a loja para preencher automaticamente os custos mensais e anuais.</p>
+        </div>
+      </div>
+
+      <div class="badge">🧮 Custo Médio Anual 2026</div>
+    </div>
+
+    <div class="grid">
+
+      <!-- CARD ESQUERDA -->
+      <div class="card">
+        <div class="cardHeader">
+          <h2>Dados da loja</h2>
+          <div class="hint">Preenchimento automático</div>
+        </div>
+        <div class="cardBody">
+
+          <div class="field">
+            <label>🏬 Loja</label>
+            <div class="control">
+              <select id="lojaSelect">
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mini">
+            <div class="field">
+              <label>📃 Regime</label>
+              <div class="control">
+                <input id="regime" type="text" readonly />
+              </div>
+            </div>
+
+            <div class="field">
+              <label>💼 Cargo</label>
+              <div class="control">
+                <input id="cargo" type="text" readonly />
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btnPrimary" id="btnCalcular">✅ Calcular</button>
+            <button class="btn btnDanger" id="btnLimpar">🗑️ Limpar</button>
+            <button class="btn btnGhost" id="btnImprimir">🖨️ Imprimir (PDF)</button>
+          </div>
+
+          <div class="result" id="resultado"></div>
+
+          <div class="footNote">
+            Dica: no PDF, o cabeçalho e os botões não aparecem para ficar limpo.  
+            Se quiser, dá para colocar também “Data/hora”, “Responsável” e “Observações”.
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD DIREITA -->
+      <div class="card">
+        <div class="cardHeader">
+          <h2>Resumo de custos</h2>
+          <div class="hint">Mensal × Anual</div>
+        </div>
+        <div class="cardBody">
+          <div class="tableWrap" id="tabelaCustos"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const fmtBRL = (v) => {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return "—";
+      return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    };
+
+    const mensalDe = (anual) => Number(anual || 0) / 12;
+
+    let lojas = [];
+    let lojaAtual = null;
+
+    function linha(nome, mes, ano, strong=false) {
+      return `
+        <tr class="${strong ? "strong" : ""}">
+          <td>${nome}</td>
+          <td>${fmtBRL(mes)}</td>
+          <td>${fmtBRL(ano)}</td>
+        </tr>
+      `;
+    }
+
+    function separador(titulo) {
+      return `
+        <tr class="sectionRow">
+          <td colspan="3">
+            <span class="sectionTag">📌 ${titulo}</span>
+          </td>
+        </tr>
+      `;
+    }
+
+    function renderTabela(loja) {
+      const el = $("tabelaCustos");
+      if (!loja) { el.innerHTML = "<div style='color:#64748b;font-size:13px;'>Selecione uma loja para visualizar os custos.</div>"; return; }
+
+      // Itens mensais (base)
+      const salarioBaseMes = Number(loja.salario_na || 0);
+      const quebraMes = Number(loja.quabra_de_cx || 0);
+      const vtMes = Number(loja.vale_transporte || 0);
+      const planoAssistMes = Number(loja.plano_assist || 0);
+      const planoOdontoMes = Number(loja.plano_odont || 0);
+      const vaMes = Number(loja.vale_alimentacao || 0);
+
+      const salarioTotalMes = Number(loja.salario_total || 0);
+      const salarioAno = Number(loja.salario_ano || 0);
+
+      // Itens anuais -> mensal = /12
+      const feriasAno = Number(loja.ferias || 0);
+      const decimoAno = Number(loja.c_13_salario || 0);
+      const fgtsAno = Number(loja.fgts || 0);
+      const quarentaAno = Number(loja.c_0_4 || 0);
+      const totalAno = Number(loja.total_ano || 0);
+
+      const feriasMes = mensalDe(feriasAno);
+      const decimoMes = mensalDe(decimoAno);
+      const fgtsMes = mensalDe(fgtsAno);
+      const quarentaMes = mensalDe(quarentaAno);
+
+      // Total mensal (média mês do total)
+      const totalMes = Number(loja.media_mes || 0);
+
+      // INSS
+      const inssMes = Number(loja.inss_mes || 0);
+      const inssAno = Number(loja.inss_ano || 0);
+
+      // INSS + impostos (anual) -> mensal
+      const inssImpostosAno = Number(loja.inss_impostos || 0);
+      const inssImpostosMes = mensalDe(inssImpostosAno);
+
+      // INSS TOTAL (anual) -> mensal
+      const inssTotalAno = Number(loja.inss_total || 0);
+      const inssTotalMes = mensalDe(inssTotalAno);
+
+      el.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Mensal</th>
+              <th>Anual</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${separador("Salários e benefícios")}
+            ${linha("Salário Base", salarioBaseMes, salarioBaseMes * 12)}
+            ${linha("Quebra de caixa", quebraMes, quebraMes * 12)}
+            ${linha("Vale transporte", vtMes, vtMes * 12)}
+            ${linha("Plano assist.", planoAssistMes, planoAssistMes * 12)}
+            ${linha("Plano odontológico", planoOdontoMes, planoOdontoMes * 12)}
+            ${linha("Vale alimentação", vaMes, vaMes * 12)}
+            ${linha("Salário total", salarioTotalMes, salarioAno, true)}
+
+            ${separador("Encargos")}
+            ${linha("Férias", feriasMes, feriasAno)}
+            ${linha("13º SALÁRIO", decimoMes, decimoAno)}
+            ${linha("FGTS", fgtsMes, fgtsAno)}
+            ${linha("40%", quarentaMes, quarentaAno)}
+            ${linha("TOTAL", totalMes, totalAno, true)}
+
+            ${separador("INSS")}
+            ${linha("INSS MÊS", inssMes, inssAno)}
+            ${linha("INSS + IMPOSTOS", inssImpostosMes, inssImpostosAno)}
+            ${linha("INSS - TOTAL", inssTotalMes, inssTotalAno, true)}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function preencherCampos(loja) {
+      lojaAtual = loja;
+      $("regime").value = loja?.regime ?? "";
+      $("cargo").value = loja?.cargo ?? "";
+      renderTabela(loja);
+      $("resultado").style.display = "none";
+      $("resultado").innerHTML = "";
+    }
+
+    function limpar() {
+      $("lojaSelect").value = "";
+      preencherCampos(null);
+    }
+
+    function calcular() {
+      if (!lojaAtual) {
+        alert("Selecione uma loja primeiro.");
+        return;
+      }
+
+      const totalMes = Number(lojaAtual.media_mes || 0);
+      const inssTotalMes = mensalDe(Number(lojaAtual.inss_total || 0));
+      const custoFinal = totalMes + inssTotalMes;
+
+      $("resultado").style.display = "block";
+      $("resultado").innerHTML = `
+        ✅ Custo mensal final (TOTAL + INSS-TOTAL): <b>${fmtBRL(custoFinal)}</b>
+      `;
+    }
+
+    async function carregarDados() {
+      const resp = await fetch("lojas.json");
+      lojas = await resp.json();
+
+      lojas.sort((a,b) => String(a.loja).localeCompare(String(b.loja), "pt-BR"));
+
+      for (const l of lojas) {
+        const opt = document.createElement("option");
+        opt.value = l.loja;
+        opt.textContent = `Loja ${l.loja}`;
+        $("lojaSelect").appendChild(opt);
+      }
+
+      $("lojaSelect").addEventListener("change", (e) => {
+        const cod = e.target.value;
+        const achou = lojas.find(x => String(x.loja) === String(cod));
+        preencherCampos(achou || null);
+      });
+
+      $("btnCalcular").addEventListener("click", calcular);
+      $("btnLimpar").addEventListener("click", limpar);
+      $("btnImprimir").addEventListener("click", () => window.print());
+
+      renderTabela(null);
+    }
+
+    carregarDados().catch(err => {
+      console.error(err);
+      alert("Erro ao carregar lojas.json. Confirme se ele está na mesma pasta do index.html.");
+    });
+  </script>
+</body>
+</html>
