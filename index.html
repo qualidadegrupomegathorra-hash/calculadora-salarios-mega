@@ -7,15 +7,13 @@
 
   <style>
     :root{
-      --brand: #d50000;        /* vermelho da marca (ajuste fino se quiser) */
+      --brand: #d50000;        /* vermelho da marca */
       --brand-2: #a80000;
       --ink: #0f172a;
       --muted:#64748b;
       --bg:#f6f7fb;
       --card:#ffffff;
       --line:#e8eaf1;
-      --ok:#16a34a;
-      --danger:#dc2626;
       --shadow: 0 14px 40px rgba(15, 23, 42, .10);
       --radius: 18px;
     }
@@ -55,6 +53,7 @@
       padding: 14px 16px;
       border-radius: var(--radius);
       box-shadow: 0 10px 30px rgba(15, 23, 42, .06);
+      flex: 1;
     }
 
     .brandBox img{ height: 54px; width:auto; }
@@ -166,7 +165,7 @@
       gap: 12px;
     }
 
-    /* tabela */
+    /* TABELA */
     .tableWrap{ width:100%; }
     table{ width:100%; border-collapse:collapse; }
     thead th{
@@ -214,9 +213,7 @@
       border-bottom: 1px solid rgba(213,0,0,.15);
     }
 
-    .moneyNeg{ color: #b91c1c; }
-
-    /* botões */
+    /* BOTÕES */
     .actions{
       display:flex;
       gap: 10px;
@@ -265,7 +262,18 @@
       background: rgba(22,163,74,.06);
       display:none;
       color: #14532d;
-      font-weight: 700;
+      font-weight: 800;
+    }
+
+    /* NOVO CARTÃO (O salário não é o custo) */
+    .explain{
+      margin-top: 12px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      color: #1e293b;
+      display:none;
     }
 
     .footNote{
@@ -275,7 +283,7 @@
       line-height: 1.4;
     }
 
-    /* responsivo */
+    /* RESPONSIVO */
     @media (max-width: 860px){
       .grid{ grid-template-columns: 1fr; }
       .badge{ display:none; }
@@ -286,7 +294,7 @@
 
     @media print{
       body{ background:#fff; }
-      .header, .actions, .result, .footNote{ display:none !important; }
+      .header, .actions, .result, .explain, .footNote{ display:none !important; }
       .card{ box-shadow:none; border:1px solid #ddd; }
       .wrap{ margin:0; padding:0; max-width: 100%; }
     }
@@ -294,6 +302,24 @@
 </head>
 
 <body>
+
+  <!--
+  🔐 (Opcional) SENHA SIMPLES:
+  Descomente e troque a senha se quiser travar o acesso.
+
+  <script>
+    (function () {
+      const SENHA_CORRETA = "MEGA@2026";
+      const tentativa = prompt("🔒 Acesso restrito\n\nDigite a senha:");
+      if (tentativa !== SENHA_CORRETA) {
+        alert("❌ Senha incorreta. Acesso negado.");
+        document.body.innerHTML = "";
+        throw new Error("Acesso negado");
+      }
+    })();
+  </script>
+  -->
+
   <div class="wrap">
 
     <div class="header">
@@ -316,6 +342,7 @@
           <h2>Dados da loja</h2>
           <div class="hint">Preenchimento automático</div>
         </div>
+
         <div class="cardBody">
 
           <div class="field">
@@ -329,14 +356,14 @@
 
           <div class="mini">
             <div class="field">
-              <label>📃 Regime</label>
+              <label>💳 Regime</label>
               <div class="control">
                 <input id="regime" type="text" readonly />
               </div>
             </div>
 
             <div class="field">
-              <label>💼 Cargo</label>
+              <label>🧾 Cargo</label>
               <div class="control">
                 <input id="cargo" type="text" readonly />
               </div>
@@ -349,12 +376,17 @@
             <button class="btn btnGhost" id="btnImprimir">🖨️ Imprimir (PDF)</button>
           </div>
 
+          <!-- Card verde -->
           <div class="result" id="resultado"></div>
 
+          <!-- NOVO cartão explicativo -->
+          <div class="explain" id="resumoCustoReal"></div>
+
           <div class="footNote">
-            Dica: no PDF, o cabeçalho e os botões não aparecem para ficar limpo.  
-            Se quiser, dá para colocar também “Data/hora”, “Responsável” e “Observações”.
+            Dica: no PDF, o cabeçalho e os botões não aparecem para ficar limpo. Se quiser, dá para colocar também
+            “Data/hora”, “Responsável” e “Observações”.
           </div>
+
         </div>
       </div>
 
@@ -408,7 +440,10 @@
 
     function renderTabela(loja) {
       const el = $("tabelaCustos");
-      if (!loja) { el.innerHTML = "<div style='color:#64748b;font-size:13px;'>Selecione uma loja para visualizar os custos.</div>"; return; }
+      if (!loja) {
+        el.innerHTML = "<div style='color:#64748b;font-size:13px;'>Selecione uma loja para visualizar os custos.</div>";
+        return;
+      }
 
       // Itens mensais (base)
       const salarioBaseMes = Number(loja.salario_na || 0);
@@ -485,11 +520,19 @@
 
     function preencherCampos(loja) {
       lojaAtual = loja;
+
       $("regime").value = loja?.regime ?? "";
       $("cargo").value = loja?.cargo ?? "";
-      renderTabela(loja);
+
+      // limpa cards
       $("resultado").style.display = "none";
       $("resultado").innerHTML = "";
+
+      const explain = $("resumoCustoReal");
+      explain.style.display = "none";
+      explain.innerHTML = "";
+
+      renderTabela(loja);
     }
 
     function limpar() {
@@ -498,56 +541,55 @@
     }
 
     function calcular() {
-  if (!lojaAtual) {
-    alert("Selecione uma loja primeiro.");
-    return;
-  }
+      if (!lojaAtual) {
+        alert("Selecione uma loja primeiro.");
+        return;
+      }
 
-  const salarioBase = Number(lojaAtual.salario_na || 0);
-  const totalMes = Number(lojaAtual.media_mes || 0);
-  const inssTotalMes = (Number(lojaAtual.inss_total || 0) / 12);
+      const salarioBase = Number(lojaAtual.salario_na || 0);
+      const totalMes = Number(lojaAtual.media_mes || 0);
+      const inssTotalMes = mensalDe(Number(lojaAtual.inss_total || 0));
 
-  const custoFinal = totalMes + inssTotalMes;
+      const custoFinal = totalMes + inssTotalMes;
 
-  $("resultado").style.display = "block";
-  $("resultado").innerHTML = `
-    ✅ <b>Custo mensal final (TOTAL + INSS-TOTAL):</b>
-    <b>${fmtBRL(custoFinal)}</b>
-  `;
+      // Card verde
+      $("resultado").style.display = "block";
+      $("resultado").innerHTML = `
+        ✅ <b>Custo mensal final (TOTAL + INSS-TOTAL):</b> <b>${fmtBRL(custoFinal)}</b>
+      `;
 
-  if (salarioBase > 0) {
-    const percentualExtra = ((custoFinal - salarioBase) / salarioBase) * 100;
-    const custoPorReal = custoFinal / salarioBase;
+      // Cartão explicativo
+      const box = $("resumoCustoReal");
+      if (salarioBase > 0) {
+        const percentualExtra = ((custoFinal - salarioBase) / salarioBase) * 100;
+        const custoPorReal = custoFinal / salarioBase;
 
-    document.getElementById("resumoCustoReal").innerHTML = `
-      <div style="font-size:15px; font-weight:800; margin-bottom:6px;">
-        💡 O salário não é o custo
-      </div>
+        box.style.display = "block";
+        box.innerHTML = `
+          <div style="font-size:15px; font-weight:900; margin-bottom:6px;">
+            💡 O salário não é o custo
+          </div>
 
-      <div style="font-size:14px; line-height:1.6;">
-        O salário base deste colaborador é
-        <b>${fmtBRL(salarioBase)}</b>.
-        <br>
-        Para mantê-lo, a empresa desembolsa
-        <b>${fmtBRL(custoFinal)}</b> por mês,
-        o que representa
-        <b style="color:#dc2626;">
-          +${percentualExtra.toFixed(2)}%
-        </b>
-        além do salário.
-      </div>
+          <div style="font-size:14px; line-height:1.6;">
+            O salário base deste colaborador é <b>${fmtBRL(salarioBase)}</b>.
+            <br>
+            Para mantê-lo, a empresa desembolsa <b>${fmtBRL(custoFinal)}</b> por mês,
+            o que representa <b style="color:#dc2626;">+${percentualExtra.toFixed(2)}%</b> além do salário.
+          </div>
 
-      <div style="margin-top:8px; font-size:13px; color:#475569;">
-        Para cada <b>R$ 1,00</b> de salário base,
-        o custo real para a empresa é de
-        <b>R$ ${custoPorReal.toFixed(2)}</b>.
-      </div>
-    `;
-  }
-}
+          <div style="margin-top:8px; font-size:13px; color:#475569;">
+            Para cada <b>R$ 1,00</b> de salário base, o custo real para a empresa é de
+            <b>R$ ${custoPorReal.toFixed(2)}</b>.
+          </div>
+        `;
+      } else {
+        box.style.display = "block";
+        box.innerHTML = `Não foi possível calcular o percentual porque o salário base está vazio/zero.`;
+      }
+    }
 
     async function carregarDados() {
-      const resp = await fetch("lojas.json");
+      const resp = await fetch("lojas.json", { cache: "no-store" });
       lojas = await resp.json();
 
       lojas.sort((a,b) => String(a.loja).localeCompare(String(b.loja), "pt-BR"));
