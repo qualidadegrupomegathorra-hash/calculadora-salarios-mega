@@ -498,20 +498,53 @@
     }
 
     function calcular() {
-      if (!lojaAtual) {
-        alert("Selecione uma loja primeiro.");
-        return;
-      }
+  if (!lojaAtual) {
+    alert("Selecione uma loja primeiro.");
+    return;
+  }
 
-      const totalMes = Number(lojaAtual.media_mes || 0);
-      const inssTotalMes = mensalDe(Number(lojaAtual.inss_total || 0));
-      const custoFinal = totalMes + inssTotalMes;
+  const salarioBase = Number(lojaAtual.salario_na || 0);
+  const totalMes = Number(lojaAtual.media_mes || 0);
+  const inssTotalMes = (Number(lojaAtual.inss_total || 0) / 12);
 
-      $("resultado").style.display = "block";
-      $("resultado").innerHTML = `
-        ✅ Custo mensal final (TOTAL + INSS-TOTAL): <b>${fmtBRL(custoFinal)}</b>
-      `;
-    }
+  const custoFinal = totalMes + inssTotalMes;
+
+  $("resultado").style.display = "block";
+  $("resultado").innerHTML = `
+    ✅ <b>Custo mensal final (TOTAL + INSS-TOTAL):</b>
+    <b>${fmtBRL(custoFinal)}</b>
+  `;
+
+  if (salarioBase > 0) {
+    const percentualExtra = ((custoFinal - salarioBase) / salarioBase) * 100;
+    const custoPorReal = custoFinal / salarioBase;
+
+    document.getElementById("resumoCustoReal").innerHTML = `
+      <div style="font-size:15px; font-weight:800; margin-bottom:6px;">
+        💡 O salário não é o custo
+      </div>
+
+      <div style="font-size:14px; line-height:1.6;">
+        O salário base deste colaborador é
+        <b>${fmtBRL(salarioBase)}</b>.
+        <br>
+        Para mantê-lo, a empresa desembolsa
+        <b>${fmtBRL(custoFinal)}</b> por mês,
+        o que representa
+        <b style="color:#dc2626;">
+          +${percentualExtra.toFixed(2)}%
+        </b>
+        além do salário.
+      </div>
+
+      <div style="margin-top:8px; font-size:13px; color:#475569;">
+        Para cada <b>R$ 1,00</b> de salário base,
+        o custo real para a empresa é de
+        <b>R$ ${custoPorReal.toFixed(2)}</b>.
+      </div>
+    `;
+  }
+}
 
     async function carregarDados() {
       const resp = await fetch("lojas.json");
